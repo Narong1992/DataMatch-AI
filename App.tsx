@@ -113,13 +113,15 @@ const App: React.FC = () => {
             onChange={setLeftText} 
             isDiffMode={!isExactMatch}
             otherValue={rightText}
+            variant="original"
           />
           <InputPanel 
-            label="Source B (Comparison)" 
+            label="Source B (Modified)" 
             value={rightText} 
             onChange={setRightText} 
             isDiffMode={!isExactMatch}
             otherValue={leftText}
+            variant="modified"
           />
         </div>
 

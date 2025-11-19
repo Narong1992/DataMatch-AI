@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { GeminiAnalysisResult } from '../types';
 
 interface AnalysisResultProps {
@@ -8,6 +8,31 @@ interface AnalysisResultProps {
 }
 
 const AnalysisResult: React.FC<AnalysisResultProps> = ({ result, loading, onAnalyze }) => {
+  const [copied, setCopied] = useState(false);
+
+  const copyToClipboard = () => {
+    if (!result) return;
+    
+    const markdown = `
+### Data Match Analysis
+**Status:** ${result.isSemanticMatch ? '✅ Match' : '❌ Mismatch'}
+**Similarity Score:** ${result.similarityScore}%
+
+**Summary:**
+${result.summary}
+
+**Key Differences:**
+${result.keyDifferences.map(d => `- ${d}`).join('\n')}
+
+${result.suggestions && result.suggestions.length > 0 ? `**Suggestions:**\n${result.suggestions.map(s => `- ${s}`).join('\n')}` : ''}
+    `.trim();
+
+    navigator.clipboard.writeText(markdown).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
   return (
     <div className="bg-white border-t border-slate-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -61,12 +86,14 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ result, loading, onAnal
                       <h3 className="text-lg font-semibold text-slate-900">
                         {result.isSemanticMatch ? 'Semantically Equivalent' : 'Significant Differences Detected'}
                       </h3>
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                        result.similarityScore > 80 ? 'bg-green-100 text-green-800' :
-                        result.similarityScore > 50 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'
-                      }`}>
-                        {result.similarityScore}% Match Score
-                      </span>
+                      <div className="flex items-center gap-3">
+                         <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                          result.similarityScore > 80 ? 'bg-green-100 text-green-800' :
+                          result.similarityScore > 50 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'
+                        }`}>
+                          {result.similarityScore}% Match Score
+                        </span>
+                      </div>
                     </div>
                     
                     <p className="text-slate-600 mb-4">{result.summary}</p>
@@ -85,10 +112,30 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ result, loading, onAnal
                       </div>
                     )}
 
-                    <div className="mt-4 flex justify-end">
+                    <div className="mt-4 flex justify-end gap-4">
+                       <button
+                          onClick={copyToClipboard}
+                          className="inline-flex items-center gap-2 text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-md font-medium transition-colors"
+                        >
+                          {copied ? (
+                             <>
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                </svg>
+                                Copied to Clipboard
+                             </>
+                          ) : (
+                             <>
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                </svg>
+                                Copy for GitHub
+                             </>
+                          )}
+                        </button>
                        <button
                           onClick={onAnalyze}
-                          className="text-sm text-indigo-600 hover:text-indigo-800 font-medium hover:underline"
+                          className="text-sm text-indigo-600 hover:text-indigo-800 font-medium hover:underline px-4 py-2"
                         >
                           Re-analyze
                         </button>
